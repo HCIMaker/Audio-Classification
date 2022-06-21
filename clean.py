@@ -9,7 +9,7 @@ from librosa.core import resample, to_mono
 from tqdm import tqdm
 import wavio
 
-
+#Don't know why it is named as mean, it should be max
 def envelope(y, rate, threshold):
     mask = []
     y = pd.Series(y).apply(np.abs)
@@ -33,6 +33,7 @@ def downsample_mono(path, sr):
         if channel == 2:
             wav = to_mono(wav.T)
         elif channel == 1:
+            # Make the wav file to a single dimension VECTOR
             wav = to_mono(wav.reshape(-1))
     except IndexError:
         wav = to_mono(wav.reshape(-1))
@@ -54,9 +55,13 @@ def save_sample(sample, rate, target_dir, fn, ix):
 
 def check_dir(path):
     if os.path.exists(path) is False:
+        print(path+" does not exist")
         os.mkdir(path)
+    else:
+        print(path+" exists")
 
-
+#Split wav file into segments, each segment has delta_sample time period
+#Later, it can be modified by directly using STFT and save throught np.save()
 def split_wavs(args):
     src_root = args.src_root
     dst_root = args.dst_root
@@ -64,7 +69,7 @@ def split_wavs(args):
 
     wav_paths = glob('{}/**'.format(src_root), recursive=True)
     wav_paths = [x for x in wav_paths if '.wav' in x]
-    dirs = os.listdir(src_root)
+    #dirs = os.listdir(src_root)
     check_dir(dst_root)
     classes = os.listdir(src_root)
     for _cls in classes:
@@ -74,7 +79,7 @@ def split_wavs(args):
         for fn in tqdm(os.listdir(src_dir)):
             src_fn = os.path.join(src_dir, fn)
             rate, wav = downsample_mono(src_fn, args.sr)
-            mask, y_mean = envelope(wav, rate, threshold=args.threshold)
+            mask, _ = envelope(wav, rate, threshold=args.threshold)
             wav = wav[mask]
             delta_sample = int(dt*rate)
 
@@ -98,9 +103,9 @@ def split_wavs(args):
 def test_threshold(args):
     src_root = args.src_root
     wav_paths = glob('{}/**'.format(src_root), recursive=True)
-    wav_path = [x for x in wav_paths if args.fn in x]
+    wav_path = [x for x in wav_paths if args.plotfile in x]
     if len(wav_path) != 1:
-        print('audio file not found for sub-string: {}'.format(args.fn))
+        print('audio file not found for sub-string: {}'.format(args.plotfile))
         return
     rate, wav = downsample_mono(wav_path[0], args.sr)
     mask, env = envelope(wav, rate, threshold=args.threshold)
@@ -126,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--sr', type=int, default=16000,
                         help='rate to downsample audio')
 
-    parser.add_argument('--fn', type=str, default='3a3d0279',
+    parser.add_argument('--plotfile', type=str, default='3a3d0279',
                         help='file to plot over time to check magnitude')
     parser.add_argument('--threshold', type=str, default=20,
                         help='threshold magnitude for np.int16 dtype')

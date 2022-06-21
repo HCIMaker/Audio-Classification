@@ -57,6 +57,7 @@ class DataGenerator(tf.keras.utils.Sequence):
 
 
 def train(args):
+    #Claim the model parameter
     src_root = args.src_root
     sr = args.sample_rate
     dt = args.delta_time
@@ -68,15 +69,20 @@ def train(args):
     models = {'conv1d':Conv1D(**params),
               'conv2d':Conv2D(**params),
               'lstm':  LSTM(**params)}
+    #Check the model type should be one of "conv1d","conv2d","lstm"
     assert model_type in models.keys(), '{} not an available model'.format(model_type)
+    #Add the log file path to the system
     csv_path = os.path.join('logs', '{}_history.csv'.format(model_type))
-
+    #Add all the dataset path into the wav_path
     wav_paths = glob('{}/**'.format(src_root), recursive=True)
     wav_paths = [x.replace(os.sep, '/') for x in wav_paths if '.wav' in x]
+    #Arrange the classes with order of letter
     classes = sorted(os.listdir(args.src_root))
     le = LabelEncoder()
     le.fit(classes)
+    #Extract the label for each wav file
     labels = [os.path.split(x)[0].split('/')[-1] for x in wav_paths]
+    #Transform string label into integer, we now have ten classes, so we got 0 to 9 as final output
     labels = le.transform(labels)
     wav_train, wav_val, label_train, label_val = train_test_split(wav_paths,
                                                                   labels,
