@@ -20,6 +20,8 @@ class DataGenerator(tf.keras.utils.Sequence):
                  batch_size=32, shuffle=True):
         self.wav_paths = wav_paths
         self.labels = labels
+        #Here dt and sr means the dimensionity of single batch sample
+        #Later, we will modify it to the dimension of STFT
         self.sr = sr
         self.dt = dt
         self.n_classes = n_classes
@@ -33,6 +35,7 @@ class DataGenerator(tf.keras.utils.Sequence):
 
 
     def __getitem__(self, index):
+        # Where is the input of index?
         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
 
         wav_paths = [self.wav_paths[k] for k in indexes]
@@ -84,6 +87,7 @@ def train(args):
     labels = [os.path.split(x)[0].split('/')[-1] for x in wav_paths]
     #Transform string label into integer, we now have ten classes, so we got 0 to 9 as final output
     labels = le.transform(labels)
+    # Separate the training and testing data
     wav_train, wav_val, label_train, label_val = train_test_split(wav_paths,
                                                                   labels,
                                                                   test_size=0.1,
@@ -94,7 +98,7 @@ def train(args):
         warnings.warn('Found {}/{} classes in training data. Increase data size or change random_state.'.format(len(set(label_train)), params['N_CLASSES']))
     if len(set(label_val)) != params['N_CLASSES']:
         warnings.warn('Found {}/{} classes in validation data. Increase data size or change random_state.'.format(len(set(label_val)), params['N_CLASSES']))
-
+    #every time tg is called, it will return a batch size of X and Y for training
     tg = DataGenerator(wav_train, label_train, sr, dt,
                        params['N_CLASSES'], batch_size=batch_size)
     vg = DataGenerator(wav_val, label_val, sr, dt,
