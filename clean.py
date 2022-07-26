@@ -89,6 +89,7 @@ def split_wavs(args):
                 sample = np.zeros(shape=(delta_sample,), dtype=np.int16)
                 sample[:wav.shape[0]] = wav
                 save_sample(sample, rate, target_dir, fn, 0)
+                print(target_dir)
             # step through audio and save every delta_sample
             # discard the ending audio if it is too short
             else:
